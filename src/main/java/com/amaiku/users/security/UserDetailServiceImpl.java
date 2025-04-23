@@ -1,7 +1,10 @@
 package com.amaiku.users.security;
 
-import com.amaiku.users.entities.UsuariosEntity;
-import com.amaiku.users.services.UsuariosService;
+import com.amaiku.users.entities.UsuarioCuentaRolEntity;
+import com.amaiku.users.entities.UsuarioEntity;
+import com.amaiku.users.exceptions.UsuarioNoRegistradoException;
+import com.amaiku.users.models.Estado;
+import com.amaiku.users.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,48 +18,52 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class UserDetailServiceImpl implements UserDetailsService {
 
     @Autowired
-    private UsuariosService usuariosService;
+    private UsuarioService usuariosService;
 
     @Autowired
     private PasswordEncoder encoder;
 
     @Override
-    public UserDetails loadUserByUsername(String s) {
+    public UserDetails loadUserByUsername(String composedUsername) {
 
-        UsuariosEntity u = null;
-        User user = null;
         try {
-            u = this.usuariosService.buscarUsuario(s);
 
-            if (u != null) {
+            // Se espera algo como "juan@Cuenta1"
+            String[] parts = composedUsername.split("-");
 
-                List<String> roles = new ArrayList<>();
-                for (int i= 0; i> u.getUsuariosRoles().size(); i++) {
-
-                    roles.add(u.getUsuariosRoles().get(i).getRol());
-                }
-
-                user = userBuilder(u.getUsuario(), u.getPass(), roles);
-
-            } else {
-                throw new UsernameNotFoundException("Usuario no registrado");
-
+            if (parts.length != 2) {
+                throw new UsernameNotFoundException("Formato inválido. Use usuario@Cuenta");
             }
 
-            return user;
+            String username = parts[0];
+            String subdominio = parts[1];
 
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            UsuarioEntity u = this.usuariosService.getUsuarioOrThrow(username);
+
+            // Filtrás los roles según la clínica
+            List<String> roles = u.getCuentasRoles().stream()
+                    .filter(rel -> rel.getCuenta().getSubdomino().equals(subdominio))
+                    .filter(rel -> Estado.ACTIVO.getValor().equals(rel.getEstado()))
+                    .map(rel -> rel.getRol().getNombre())
+                    .collect(Collectors.toList());
+
+            if (roles.isEmpty()) {
+                throw new UsernameNotFoundException("No hay roles activos para esta clínica");
+            }
+
+            return userBuilder(u.getMail(), u.getPass(), roles);
+
+        } catch (UsuarioNoRegistradoException e) {
+            throw new UsernameNotFoundException("Usuario no registrado", e);
         }
-
-        return user;
     }
 
     private User userBuilder(String usuario, String clave, List<String> roles){

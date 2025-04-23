@@ -5,10 +5,11 @@ FROM openjdk:8-jdk-slim
 WORKDIR /app
 
 # Copia el archivo JAR de la aplicación al contenedor
-COPY target/serviciousuarios-0.0.1-SNAPSHOT.jar app.jar
+COPY target/amaiku-users-1.0.0.jar app.jar
 
-# Expone el puerto en el que la API se ejecuta
-EXPOSE 8093
+# Expone puertos
+EXPOSE 8090
+EXPOSE 5005
 
-# Define el comando para ejecutar la API
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Comando de inicio, utilizando JAVA_TOOL_OPTIONS
+CMD java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005 -jar /app/app.jar

@@ -1,63 +1,37 @@
 package com.amaiku.users.services.Impl;
 
-import com.amaiku.users.entities.RolesEntity;
-import com.amaiku.users.exceptions.RolExistenteException;
-import com.amaiku.users.exceptions.RolNoRegistradoException;
-import com.amaiku.users.models.RolesModel;
-import com.amaiku.users.repositories.RolesRepository;
-import com.amaiku.users.services.RolesService;
+import com.amaiku.users.entities.RolEntity;
+import com.amaiku.users.entities.UsuarioEntity;
+import com.amaiku.users.exceptions.*;
+import com.amaiku.users.models.RolModel;
+import com.amaiku.users.models.UsuarioModel;
+import com.amaiku.users.repositories.RolRepository;
+import com.amaiku.users.services.RolService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
-public class RolesServiceImpl implements RolesService {
+public class RolesServiceImpl implements RolService {
 
     @Autowired
-    private RolesRepository rolesRepository;
+    private RolRepository rolRepository;
+
 
     @Override
-    public void crearRol(RolesModel rol) throws RolExistenteException {
+    public RolModel buscarRol(String nombre) throws RolNoRegistradoException {
+        RolEntity entity = getRolOrThrow(nombre);
 
-        RolesEntity r = this.rolesRepository.findByRol(rol.getRol(), rol.getAplicacion());
+        return new RolModel(
+                entity.getIdRol(),
+                entity.getNombre()
 
-        if(r==null){
-            RolesEntity rolNuevo = new RolesEntity(
-                    rol.getRol(),
-                    rol.getAplicacion()
-            );
-
-
-            this.rolesRepository.save(rolNuevo);
-        }else {
-            throw new RolExistenteException();
-
-        }
-
+        );
     }
 
-    @Override
-    public void deleteRol(RolesModel rol) throws RolNoRegistradoException {
-
-        RolesEntity r = this.rolesRepository.findByRol(rol.getRol(), rol.getAplicacion());
-
-        if(r!=null){
-            this.rolesRepository.delete(r);
-        }else{
-            throw new RolNoRegistradoException();
-        }
-
-    }
-
-    @Override
-    public RolesEntity buscarRol(RolesModel rol) throws RolNoRegistradoException {
-
-        RolesEntity r = this.rolesRepository.findByRol(rol.getRol(), rol.getAplicacion());
-
-        if(r!=null){
-           return r;
-        }else{
-            throw new RolNoRegistradoException();
-        }
-
+    private RolEntity getRolOrThrow(String nombre) throws RolNoRegistradoException {
+        return Optional.ofNullable(rolRepository.findByRol(nombre))
+                .orElseThrow(RolNoRegistradoException::new);
     }
 }

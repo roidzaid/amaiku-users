@@ -12,6 +12,9 @@ import java.util.List;
 @Service
 public class JwtService {
 
+    private static final String AUTH_SECRET = "clave-secreta-usuarios-api";
+    private static final String RECOVERY_SECRET = "clave-secreta-amaiku-users";
+
     public String createToken(String usuario, List<String> roles){
 
         return JWT.create()
@@ -21,9 +24,18 @@ public class JwtService {
                 //.withExpiresAt(new Date(System.currentTimeMillis() + 360000))
                 .withClaim("user", usuario)
                 .withArrayClaim("roles", roles.toArray(new String[0]))
-                .sign(Algorithm.HMAC256("clave-secreta-usuarios-api"));
+                .sign(Algorithm.HMAC256(AUTH_SECRET));
 
+    }
 
+    public String createRecoveryToken(String usuario) {
+        return JWT.create()
+                .withIssuer("Usuarios-token")
+                .withSubject("password-recovery")
+                .withClaim("user", usuario)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + 1000 * 60 * 15)) // 15 mins
+                .sign(Algorithm.HMAC256(RECOVERY_SECRET));
     }
 
     public boolean isBearer(String authorization){
@@ -43,7 +55,7 @@ public class JwtService {
         }
 
         try {
-            return JWT.require(Algorithm.HMAC256("clave-secreta-usuarios-api"))
+            return JWT.require(Algorithm.HMAC256(AUTH_SECRET))
                     .withIssuer("Usuarios-token").build()
                     .verify(authorization.substring("Bearer ".length()));
         }catch (Exception e) {
@@ -53,5 +65,33 @@ public class JwtService {
 
     public List<String> roles(String authorization) throws Exception{
         return Arrays.asList(this.verify(authorization).getClaim("roles").asArray(String.class));
+    }
+
+    public DecodedJWT verifyRecoveryToken(String token) throws Exception {
+        try {
+            return JWT.require(Algorithm.HMAC256(RECOVERY_SECRET))
+                    .withIssuer("Usuarios-token")
+                    .withSubject("password-recovery")
+                    .build()
+                    .verify(token);
+        } catch (Exception e) {
+            throw new Exception("Token inválido o expirado: " + e.getMessage());
+        }
+    }
+
+    public String extractUsername(String token) throws Exception {
+
+        System.out.println("✅ Verificando token: " + token);
+
+        try {
+            DecodedJWT jwt = JWT.require(Algorithm.HMAC256(RECOVERY_SECRET))
+                    .withIssuer("Usuarios-token")
+                    .withSubject("password-recovery")
+                    .build()
+                    .verify(token);
+            return jwt.getClaim("user").asString();
+        } catch (Exception e) {
+            throw new Exception("Token inválido o expirado: " + e.getMessage());
+        }
     }
 }
