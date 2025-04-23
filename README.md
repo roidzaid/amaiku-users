@@ -27,23 +27,31 @@ El servicio `amaiku-users` se encarga de la **gestión de usuarios, autenticaci�
 
 ---
 
-🧪 Endpoints
-🔐 Autenticación
-Método	Ruta	Descripción
-POST	/auth/registro	Registro de un nuevo usuario con rol asignado
-POST	/auth/login	Login de usuarios con JWT usando mail y cuenta
-PUT	/auth/recuperarPass	Solicita recuperación de contraseña (envía mail)
-GET	/auth/validar-token-recuperacion	Verifica si el token de recuperación es válido
-POST	/auth/resetear-password	Restablece la contraseña con un token válido
-👤 Usuarios
-Método	Ruta	Descripción
-GET	/usuarios/{usuario}	Obtener información de un usuario específico
-PUT	/usuarios	Actualizar estado (activo/inactivo) de un usuario
-🏢 Cuentas
-Método	Ruta	Descripción
-POST	/cuenta	Crear una nueva cuenta (requiere rol AMAIKU)
-PUT	/cuenta	Actualizar una cuenta (requiere rol AMAIKU o ADMIN_CUENTA)
+## 🧪 Endpoints
 
+### 🔐 Autenticación
+
+| Método | Ruta                                | Descripción |
+|--------|-------------------------------------|-------------|
+| `POST` | `/auth/registro`                    | Registro de un nuevo usuario con rol asignado |
+| `POST` | `/auth/login`                       | Login de usuarios con JWT usando mail y cuenta |
+| `PUT`  | `/auth/recuperarPass`               | Solicita recuperación de contraseña (envía mail) |
+| `GET`  | `/auth/validar-token-recuperacion`  | Verifica si el token de recuperación es válido |
+| `POST` | `/auth/resetear-password`           | Restablece la contraseña con un token válido |
+
+### 👤 Usuarios
+
+| Método | Ruta                  | Descripción |
+|--------|-----------------------|-------------|
+| `GET`  | `/usuarios/{usuario}` | Obtener información de un usuario específico |
+| `PUT`  | `/usuarios`           | Actualizar estado (activo/inactivo) de un usuario |
+
+### 🏢 Cuentas
+
+| Método | Ruta      | Descripción |
+|--------|-----------|-------------|
+| `POST` | `/cuenta` | Crear una nueva cuenta (requiere rol AMAIKU) |
+| `PUT`  | `/cuenta` | Actualizar una cuenta (requiere rol AMAIKU o ADMIN_CUENTA) |
 ---
 
 ## 🔐 Autenticación
